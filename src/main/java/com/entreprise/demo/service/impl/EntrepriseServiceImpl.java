@@ -4,6 +4,7 @@ import com.entreprise.demo.exception.ResourceNotFoundException;
 import com.entreprise.demo.model.Entreprise;
 import com.entreprise.demo.repository.EntrepriseRepository;
 import com.entreprise.demo.service.EntrepriseService;
+import com.entreprise.demo.validator.EntrepriseValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +19,8 @@ public class EntrepriseServiceImpl implements EntrepriseService {
 
     @Autowired
     private EntrepriseRepository entrepriseRepository;
-
+    @Autowired
+    private EntrepriseValidator entrepriseValidator;
     private final Logger log = LoggerFactory.getLogger(EntrepriseServiceImpl.class);
 
     @Override
@@ -36,6 +38,7 @@ public class EntrepriseServiceImpl implements EntrepriseService {
     @Override
     public Entreprise createEntreprise(Entreprise entreprise) {
         log.debug("request to create new entreprise {}", entreprise);
+        entrepriseValidator.beforeSave(entreprise);
         return entrepriseRepository.save(entreprise);
     }
 
@@ -48,6 +51,7 @@ public class EntrepriseServiceImpl implements EntrepriseService {
             entreprise.setSiret(entrepriseRequest.getSiret());
             entreprise.setSocialReason(entrepriseRequest.getSocialReason());
             entreprise.setCreatedAt(new Date());
+            entrepriseValidator.beforeUpdate(entrepriseRequest);
             return entrepriseRepository.save(entreprise);
         }).orElseThrow(() -> new ResourceNotFoundException("entrepriseId " + entrepriseRequest.getId() + " not found"));    }
 
