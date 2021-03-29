@@ -5,6 +5,7 @@ import com.entreprise.demo.model.Employe;
 import com.entreprise.demo.repository.EmployeRepository;
 import com.entreprise.demo.repository.EntrepriseRepository;
 import com.entreprise.demo.service.EmployeService;
+import com.entreprise.demo.validator.EmployeValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,13 +13,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+
 @Service
 public class EmployeServiceImpl implements EmployeService {
     @Autowired
     private EmployeRepository employeRepository;
     @Autowired
     private EntrepriseRepository entrepriseRepository;
-
+    @Autowired
+    private EmployeValidator employeValidator;
     private final Logger log = LoggerFactory.getLogger(EmployeServiceImpl.class);
 
 
@@ -44,6 +48,7 @@ public class EmployeServiceImpl implements EmployeService {
         log.debug("request to create new employe By Entreprise id {} , {}", employe, EntrepriseId);
         return entrepriseRepository.findById(EntrepriseId).map(entreprise -> {
             employe.setEntreprise(entreprise);
+            employeValidator.beforeSave(employe);
             return employeRepository.save(employe);
         }).orElseThrow(() -> new ResourceNotFoundException("Entreprise " + EntrepriseId + " not found"));
     }
@@ -62,6 +67,7 @@ public class EmployeServiceImpl implements EmployeService {
             employe.setSocialSecurityNumber(employeRequest.getSocialSecurityNumber());
             employe.setHiringDate(employeRequest.getHiringDate());
             employe.setSalary(employeRequest.getSalary());
+            employeValidator.beforeUpdate(employeRequest);
             return employeRepository.save(employe);
         }).orElseThrow(() -> new ResourceNotFoundException("employeId " + employeRequest.getId() + "not found"));    }
 
@@ -72,5 +78,25 @@ public class EmployeServiceImpl implements EmployeService {
             employeRepository.delete(employe);
             return employe;
         }).orElseThrow(() -> new ResourceNotFoundException("Employe not found with id " + EmployeId + " and EntrepriseId " + EntrepriseId));
+    }
+
+    @Override
+    public BigDecimal getSalaryByEntrepriseIdAndContractType(Long entrepriseId, String contractType, String grille) {
+        BigDecimal salary = null;
+        if(grille.equals("min")){
+            salary = employeRepository.min(entrepriseId,contractType);
+        }
+        if (grille.equals("max")){
+            salary = employeRepository.max(entrepriseId,contractType);
+        }
+        if (grille.equals("moy")){
+            salary = employeRepository.moyen(entrepriseId,contractType);
+        }
+        return salary;
+    }
+
+    @Override
+    public Page<Employe> filterEmployes(String search, Pageable pageable) {
+        return employeRepository.filterEmployes(search,pageable);
     }
 }

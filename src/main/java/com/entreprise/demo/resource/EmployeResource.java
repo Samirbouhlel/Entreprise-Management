@@ -7,6 +7,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+
 @RequestMapping("/Employe")
 @RestController
 public class EmployeResource {
@@ -41,5 +43,14 @@ public class EmployeResource {
     @DeleteMapping("/delete/{entrepriseId}/{EmployeId}")
     public Employe deleteEmploye(@PathVariable Long entrepriseId, @PathVariable Long EmployeId) {
         return employeService.deleteEmploye(entrepriseId, EmployeId);
+    }
+    @GetMapping("/salary/{entrepriseId}/{contractType}/{grille}")
+    public BigDecimal getSalaryByEntrepriseIdAndContractType(@PathVariable Long entrepriseId, @PathVariable String contractType,@PathVariable String grille) {
+        return employeService.getSalaryByEntrepriseIdAndContractType(entrepriseId, contractType, grille);
+    }
+
+    @GetMapping("/filter/{search}")
+    public Page<Employe> filterEmploye(@PathVariable String search, Pageable pageable) {
+        return employeService.filterEmployes(search, pageable);
     }
 }
